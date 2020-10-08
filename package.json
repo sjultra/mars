@@ -1,0 +1,39 @@
+{
+    "name": "report_gen",
+    "version": "0.0.1",
+    "description": "Report Generator for diferent data sources",
+    "main": "main.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "pkg ."
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sjultra/report_gen.git"
+    },
+    "bin": "main.js",
+    "keywords": [
+        "report",
+        "generator",
+        "agregator",
+        "generate",
+        "report",
+        "generate"
+    ],
+    "author": "TaEduard",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/sjultra/report_gen/issues"
+    },
+    "homepage": "https://github.com/sjultra/report_gen#readme",
+    "dependencies": {
+        "@google-cloud/security-center": "^5.0.1",
+        "axios": "^0.19.2",
+        "commander": "^5.1.0",
+        "sequelize": "^6.3.5",
+        "xml2json": "^0.12.0"
+    },
+    "devDependencies": {
+        "pkg": "^4.4.9"
+    }
+}

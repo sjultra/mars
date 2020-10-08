@@ -1,0 +1,26 @@
+@startuml
+
+title Project Mars architecture
+
+cloud PrismaCloud
+cloud Qualys
+cloud CSCC
+node "GCP VM" {
+    Package "Docker container" {
+        component VolumeSharedSecrets
+        component RTUtility
+    }
+    database Mysql
+}
+
+
+
+RTUtility <-> Mysql
+RTUtility -> Qualys
+RTUtility -> PrismaCloud
+RTUtility -> CSCC
+RTUtility -> VolumeSharedSecrets
+
+
+
+@enduml
