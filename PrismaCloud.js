@@ -23,6 +23,9 @@ const init = async (pcfg, cfgIndex, config, DataStore, funcList, LogWritter) => 
                         case "getUsers": getUsers(pcfg.api, cfgIndex, config, DataStore, LogWritter); break;
                         case "getSA": getSA(pcfg.api, cfgIndex, config, DataStore, LogWritter); break;
                         case "getAuditLogs": getAuditLogs(pcfg.api, cfgIndex, config, DataStore, LogWritter); break;
+                        case "getPoliciesLogs": getPoliciesLogs(pcfg.api, cfgIndex, config, DataStore, LogWritter);break;
+                        case "getComplianceLogs": getComplianceLogs(pcfg.api, cfgIndex, config, DataStore, LogWritter);break;
+                        case "getPolicyComplianceLogs": getPolicyComplianceLogs(pcfg.api, cfgIndex, config, DataStore, LogWritter);break;
                     }
                 });
             }
@@ -92,5 +95,64 @@ const getAuditLogs = async (pcfgapi, cfgIndex, config, DataStore, LogWritter) =>
         LogWritter(config, "err", `${JSON.stringify(err, null, 4)}`, `prisma_get_Audit_Logs_${cfgIndex}`)
     }
 };
+const getPoliciesLogs = async (pcfgapi, cfgIndex, config, DataStore, LogWritter) => {
+    try {
+        console.log("Getting PrismaCLoud information");
+        const api = pcfgapi + "/v2/policy";
+        const jwt = DataStore.get("x-redlock-auth");
+        const options = {
+            method: "GET",
+            headers: {
+                "x-redlock-auth": jwt,
+                accept: "application/json; charset=UTF-8",
+            },
+            url: api,
+        };
+        const response = await axios(options);
+        LogWritter(config, "json", `${JSON.stringify(response.data, null, 4)}`, `prisma_get_Policies_${cfgIndex}`)
+    } catch (err) {
+        LogWritter(config, "err", `${JSON.stringify(err, null, 4)}`, `prisma_get_Policies_${cfgIndex}`)
+    }
+};
+
+const getComplianceLogs = async (pcfgapi, cfgIndex, config, DataStore, LogWritter) => {
+    try {
+        console.log("Getting PrismaCLoud information");
+        const api = pcfgapi + "/compliance";
+        const jwt = DataStore.get("x-redlock-auth");
+        const options = {
+            method: "GET",
+            headers: {
+                "x-redlock-auth": jwt,
+                accept: "application/json; charset=UTF-8",
+            },
+            url: api,
+        };
+        const response = await axios(options);
+        LogWritter(config, "json", `${JSON.stringify(response.data, null, 4)}`, `prisma_get_Compliance_${cfgIndex}`)
+    } catch (err) {
+        LogWritter(config, "err", `${JSON.stringify(err, null, 4)}`, `prisma_get_Compliance_${cfgIndex}`)
+    }
+};
+const getPolicyComplianceLogs = async (pcfgapi, cfgIndex, config, DataStore, LogWritter) => {
+    try {
+        console.log("Getting PrismaCLoud information");
+        const api = pcfgapi + "/policy/compliance";
+        const jwt = DataStore.get("x-redlock-auth");
+        const options = {
+            method: "GET",
+            headers: {
+                "x-redlock-auth": jwt,
+                accept: "application/json; charset=UTF-8",
+            },
+            url: api,
+        };
+        const response = await axios(options);
+        LogWritter(config, "json", `${JSON.stringify(response.data, null, 4)}`, `prisma_get_Policy_Compliance_${cfgIndex}`)
+    } catch (err) {
+        LogWritter(config, "err", `${JSON.stringify(err, null, 4)}`, `prisma_get_Policy_Compliance_${cfgIndex}`)
+    }
+};
+
 
 module.exports = { init };

@@ -27,5 +27,5 @@ The example assums that the following folders exist:
 docker run --name=Mars -d \
 --mount type=bind,source="$(pwd)"/config.local,target=/root/Mars/config \
 --mount type=bind,source="$(pwd)"/output.local,target=/root/Mars/output \
- taeduard/sjumars:latest /bin/bash  -c "node main.js -c ./config/config.local.json"
+ sjultra/mars:latest /bin/bash  -c "node main.js -c ./config/config.local.json"
 ```

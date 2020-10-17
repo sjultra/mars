@@ -9,7 +9,10 @@
             "requests": [
                 "getUsers",
                 "getSA",
-                "getAuditLogs"
+                "getAuditLogs",
+                "getPoliciesLogs",
+                "getComplianceLogs",
+                "getPolicyComplianceLogs"
             ]
         }
     ],
@@ -38,7 +41,7 @@
     "CSCC": [
         {
             "credentials": {
-                "GOOGLE_APPLICATION_CREDENTIALS": "./SA_File.json",
+                "GOOGLE_APPLICATION_CREDENTIALS": "/root/Mars/config/SA_File.json",
                 "ORG_ID": "xxxxxxxxxxxx"
             },
             "requests": [
@@ -48,6 +51,6 @@
     ],
     "output": {
         "mode": "File",
-        "path": "./local"
+        "path": "/root/Mars/output"
     }
 }
