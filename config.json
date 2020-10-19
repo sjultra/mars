@@ -13,7 +13,8 @@
                 "getPoliciesLogs",
                 "getComplianceLogs",
                 "getPolicyComplianceLogs"
-            ]
+            ],
+            "tag": "demo1"
         }
     ],
     "Qualys": [
