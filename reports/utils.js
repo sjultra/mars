@@ -1,4 +1,3 @@
-const { parse } = require('json2csv');
 
 const TransformJson = (data, replacements, extras) => {
   let dataRemapped = []
@@ -29,12 +28,49 @@ const TransformJson = (data, replacements, extras) => {
   });
   return dataRemapped
 }
-const TranfsormJsonData = (myData, opts) => {
-  try {
-    return parse(myData, opts);
-  } catch (err) {
-    console.error(err);
+
+const TranfsormJsonData = (data, Arrkeys) => {
+  for (const el of Arrkeys) {
+    for (const [index, datael] of data.entries()) {
+      if (datael[el] !== undefined) {
+        datael[el] = datael[el].toString()
+      }
+    }
   }
 }
 
-module.exports = { TranfsormJsonData, TransformJson }
+const ReportBuilder = (data, cardinal, ordinal) => {
+  obj = {}
+  for (const datael of data) {
+    switch (typeof datael[cardinal]) {
+      case "string":
+        obj[datael[cardinal]][datael[ordinal]] = 1
+        break
+      case "object":
+        if (Array.isArray(datael[cardinal])) {
+          for (const key of datael[cardinal]) {
+            obj[key] = { [datael[ordinal]]: 1 }
+          }
+        }
+        break
+      case "undefined":
+        break
+    }
+  }
+  return obj
+}
+
+const ReportBuilderConvert = (data, cardinal, ordinal) => {
+  obj = []
+  for (const key1 of Object.keys(data)) {
+    objtemp = { [cardinal]: key1, [ordinal]: [] }
+    for (const key2 of Object.keys(data[key1])) {
+      objtemp[ordinal].push(key2)
+    }
+    obj.push(objtemp)
+  }
+  return obj
+}
+
+
+module.exports = { TranfsormJsonData, TransformJson, ReportBuilder, ReportBuilderConvert }

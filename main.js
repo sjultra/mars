@@ -1,12 +1,13 @@
 const { program } = require("commander");
 const fs = require("fs");
 const QualysApi = require("./Qualys");
-const CSCCApi = require("./CSCC");
+const GCPApi = require("./GCP");
 const PrismaCloudApi = require("./PrismaCloud");
 const cfgParser = require("./configParser.js");
 const DStore = require("./dataStore");
 const version = require("./package.json").version;
 const { LogWritter } = require("./LogWritter")
+const {InitAggregator,AddDataToAggregator,WriteDataFromAggregator} = require("./reports/report")
 program.option("-c, --config <src>", "Path to the config file");
 program.option("-o, --output <src>", "Path to the output folder");
 
@@ -21,23 +22,26 @@ console.log("Loading config ...");
 console.log(`${program.config}`, fs.existsSync(`${program.config}`));
 config = new cfgParser(program.config);
 output = program.output
-
+const workbook = InitAggregator(config)
 console.log("Running:");
 
 if (config.Qualys) {
-    config.Qualys.forEach((entry,index) => {
+    for (const [index, entry] of config.Qualys.entries()) {
         QualysApi.init(entry.credentials, index, config, Stor, entry.requests, LogWritter)
-    });
+    }
 }
 
-if (config.CSCC) {
-    config.CSCC.forEach((entry,index) => {
-        CSCCApi.init(entry.credentials, index, config, Stor, entry.requests, LogWritter)
-    });
+if (config.GCP) {
+        for (const [index, entry] of config.GCP.entries()) {
+
+        GCPApi.init(entry.credentials, index, config, Stor, entry.requests, LogWritter)
+    }
 }
 
 if (config.PrismaCloud) {
-    config.PrismaCloud.forEach((entry, index) => {
-        PrismaCloudApi.init(entry.credentials, index, config, Stor, entry.requests, LogWritter);
-    });
+        for (const [index, entry] of config.PrismaCloud.entries()) {
+        PrismaCloudApi.init(entry.credentials, index, config, Stor, entry.requests, {workbook, AddDataToAggregator});
+        }
 }
+
+process.on('exit', ()=>{WriteDataFromAggregator(workbook,config)});

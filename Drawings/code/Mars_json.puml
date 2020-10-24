@@ -1,6 +1,6 @@
 @startuml
 
-title Project Mars architecture (output: json files and Mysql)
+title Project Mars architecture (output: json files)
 
 cloud PrismaCloud
 cloud Qualys
@@ -10,9 +10,6 @@ node "VM" {
         component SharedVolume1
         component SharedVolume2
         component RTUtility
-    }
-        Package "Docker container 2" {
-        database Mysql
     }
 }
 note bottom of [SharedVolume1]
@@ -29,7 +26,6 @@ RTUtility -> PrismaCloud
 RTUtility -> GCP
 RTUtility -> SharedVolume1
 RTUtility <- SharedVolume2
-RTUtility <- Mysql
 
 
 

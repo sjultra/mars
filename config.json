@@ -52,6 +52,7 @@
     ],
     "output": {
         "mode": "File",
+        "report":"XLSX",
         "path": "/root/Mars/output"
     }
 }

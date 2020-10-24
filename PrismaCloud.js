@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { TranfsormJsonData, TransformJson } = require("./reports/utils");
+const { TranfsormJsonData, TransformJson,ReportBuilder,ReportBuilderConvert } = require("./reports/utils");
 const init = async (pcfg, cfgIndex, config, DataStore, funcList, LogWritter) => {
     try {
         console.log("Init Prisma cloud");
@@ -31,7 +31,7 @@ const init = async (pcfg, cfgIndex, config, DataStore, funcList, LogWritter) => 
             }
         })
     } catch (err) {
-        console.log("error:", err)
+        console.log("error:",err)
     }
 };
 
@@ -51,7 +51,7 @@ const getUsers = async (pcfgapi, cfgIndex, config, DataStore, LogWritter) => {
         const response = await axios(options);
         LogWritter(config, "json", `${JSON.stringify(response.data, null, 4)}`, `prisma_get_users_${cfgIndex}`)
     } catch (err) {
-        console.log("error:", err)
+        console.log("error:",err)
     }
 };
 
@@ -92,7 +92,7 @@ const getAuditLogs = async (pcfgapi, cfgIndex, config, DataStore, LogWritter) =>
         const response = await axios(options);
         LogWritter(config, "json", `${JSON.stringify(response.data, null, 4)}`, `prisma_get_Audit_Logs_${cfgIndex}`)
     } catch (err) {
-        console.log("error:", err)
+        console.log("error:",err)
     }
 };
 
@@ -109,8 +109,10 @@ const getPoliciesLogs = async (pcfgapi, cfgIndex, config, DataStore, LogWritter)
             },
             url: api,
         };
-        const response = await axios(options);
-        const opts = { fields: ["Instance", "Policy Descriptor", "Policy Name", "Compliance Requirement", "Compliance Section", "Category", "Policy Class", "Policy Sub Types", "Cloud", "Severity", "Policy Type", "Labels", "Remediable", "Policy Mode", "Standards", "Last Modified By", "Last Modified By", "Status", "RQL"] }
+        // const response = 
+        await axios(options).then((response)=>{
+        const headerList =  ["Instance", "Policy Descriptor", "Policy Name", "Compliance Requirement", "Compliance Section", "Category", "Policy Class", "Policy Sub Types", "Cloud", "Severity", "Policy Type", "Labels", "Remediable", "Policy Mode", "Standards", "Last Modified By", "Last Modified By", "Status", "RQL"] 
+        const KeysArrs = ['Compliance Requirement', 'Compliance Section','Policy Sub Types',"Labels","Standards"]
         const replacements = {
             'policyUpi': 'Policy Descriptor',
             'name': 'Policy Name',
@@ -135,13 +137,23 @@ const getPoliciesLogs = async (pcfgapi, cfgIndex, config, DataStore, LogWritter)
         }
         const extras = { 'Instance': config.PrismaCloud[cfgIndex].tag }
         const dataRemapped = TransformJson(response.data, replacements, extras)
-        getQueryForPolicy(pcfgapi, DataStore, dataRemapped, (data) => {
-            outputData = TranfsormJsonData(data, opts);
-            LogWritter(config, "csv", `${outputData}`, `prisma_get_Policies_${cfgIndex}`);
+    
+        const dataRemappedCP=JSON.parse(JSON.stringify(dataRemapped));
+    
+        getQueryForPolicy(pcfgapi,DataStore,dataRemapped,(data)=>{
+            TranfsormJsonData(data,KeysArrs)
+        LogWritter.AddDataToAggregator(LogWritter.workbook,config,data,{header:headerList},"getPoliciesLogs")
         })
+        
+        const headerListSummary =  ["Labels","Policy Name"] 
+        reportData=ReportBuilder(dataRemappedCP,"Labels","Policy Name")
+        SummaryData=ReportBuilderConvert(reportData,"Labels","Policy Name")
+        TranfsormJsonData(SummaryData,["Policy Name"])
+        LogWritter.AddDataToAggregator(LogWritter.workbook,config,SummaryData,{header:headerListSummary},"labelSummaryGetPoliciesLogs")
 
+    });
     } catch (err) {
-        console.log("error:", err)
+        console.log("error:",err)
     }
 };
 
@@ -159,7 +171,8 @@ const getComplianceLogs = async (pcfgapi, cfgIndex, config, DataStore, LogWritte
             url: api,
         };
         const response = await axios(options);
-        const opts = { fields: ["Instance", "Name", "Description", "Cloud", "Created By", "Last Modified By", "Last Modified On", "Policies Assigned"] }
+        const headerList= ["Instance", "Name", "Description", "Cloud", "Created By", "Last Modified By", "Last Modified On", "Policies Assigned"] 
+        const KeysArrs = ["Cloud"]
         const replacements = {
             'description': 'Description',
             'createdBy': 'Created By',
@@ -171,11 +184,10 @@ const getComplianceLogs = async (pcfgapi, cfgIndex, config, DataStore, LogWritte
         };
         const extras = { 'Instance': config.PrismaCloud[cfgIndex].tag }
         const dataRemapped = TransformJson(response.data, replacements, extras)
-        outputData = TranfsormJsonData(dataRemapped, opts)
-        LogWritter(config, "csv", `${outputData}`, `prisma_get_Compliance_${cfgIndex}`)
+        TranfsormJsonData(dataRemapped,KeysArrs)
+        LogWritter.AddDataToAggregator(LogWritter.workbook,config,dataRemapped,{header:headerList},"getComplianceLogs")
     } catch (err) {
         console.log(err)
-        LogWritter(config, "err", `${JSON.stringify(err, null, 4)}`, `prisma_get_Compliance_${cfgIndex}`)
     }
 };
 
@@ -194,16 +206,16 @@ const getPolicyComplianceLogs = async (pcfgapi, cfgIndex, config, DataStore, Log
         const response = await axios(options);
         LogWritter(config, "json", `${JSON.stringify(response.data, null, 4)}`, `prisma_get_Policy_Compliance_${cfgIndex}`)
     } catch (err) {
-        console.log("error:", err)
+        console.log("error:",err)
     }
 };
 
 
-const getQueryForPolicy = async (pcfgapi, DataStore, data, callback) => {
+const getQueryForPolicy = async (pcfgapi, DataStore,data,callback) => {
     try {
         console.log("Getting PrismaCLoud information");
         for (const element of data) {
-            if (element.RQL && element.RQL.match(/.{8}-.{4}-.{4}-.{4}-.{12}/g)) {
+            if(element.RQL && element.RQL.match(/.{8}-.{4}-.{4}-.{4}-.{12}/g)){
                 const api = pcfgapi + `/search/history/${element.RQL}`;
                 const jwt = DataStore.get("x-redlock-auth");
                 const options = {
@@ -214,19 +226,18 @@ const getQueryForPolicy = async (pcfgapi, DataStore, data, callback) => {
                     },
                     url: api,
                 };
-                await axios(options).then((response) => {
-                    element.RQL = response.data.query
+                await axios(options).then((response)=>{
+                    element.RQL=response.data.query
                 })
-            } else {
-                element.RQL = 'N/A'
-            }
+                }else{
+                    element.RQL='N/A'        
+                } 
         }
-        callback(data)
+            callback(data)    
     } catch (err) {
-        console.log("error:", err)
+        console.log("error:",err)
     }
 };
-
 
 
 module.exports = { init };
