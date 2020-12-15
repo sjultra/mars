@@ -1,0 +1,42 @@
+pipeline {
+    agent {
+        docker { 
+            image 'node:lts' 
+            args '-u root'
+        }
+    }
+
+    stages {
+        stage('Prepare Environment') {
+            steps {
+                sh """
+                    mkdir /tmp/mars-output
+                    npm i
+                """
+            }
+        }
+        stage('Fetch Data') {
+            steps {
+                withCredentials([file(credentialsId: 'TEST_CREDENTIALS', variable: 'test_credentials_path')]) {
+                    sh """
+                        node main.js -c "$test_credentials_path"
+
+                        mkdir ./logs
+                        cp -r /tmp/mars-output ./logs
+                        echo "Output:"
+                        ls ./logs
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'logs/**', fingerprint: true
+        }
+        cleanup {
+            cleanWs()
+        }
+    }
+}

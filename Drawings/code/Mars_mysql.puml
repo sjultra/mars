@@ -1,0 +1,33 @@
+@startuml
+
+title Project Mars architecture (output: mysql)
+
+cloud PrismaCloud
+cloud Qualys
+cloud GCP
+node "VM" {
+    Package "Docker container 1" {
+        component SharedVolume
+        component RTUtility
+    }
+
+    Package "Docker container 2" {
+        database Mysql
+    }
+}
+
+note right of [SharedVolume]
+  contains the credentials 
+end note
+
+
+
+RTUtility <- Mysql
+RTUtility -> Qualys
+RTUtility -> PrismaCloud
+RTUtility -> GCP
+RTUtility -> SharedVolume
+
+
+
+@enduml

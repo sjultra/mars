@@ -1,0 +1,32 @@
+@startuml
+
+title Project Mars architecture (output: json files)
+
+cloud PrismaCloud
+cloud Qualys
+cloud GCP
+node "VM" {
+    Package "Docker container 1" {
+        component SharedVolume1
+        component SharedVolume2
+        component RTUtility
+    }
+}
+note bottom of [SharedVolume1]
+  contains the credentials 
+end note
+note bottom of [SharedVolume2]
+  will contain the output
+end note
+
+
+
+RTUtility -> Qualys
+RTUtility -> PrismaCloud
+RTUtility -> GCP
+RTUtility -> SharedVolume1
+RTUtility <- SharedVolume2
+
+
+
+@enduml

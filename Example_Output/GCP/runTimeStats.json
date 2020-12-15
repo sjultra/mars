@@ -1,0 +1,16 @@
+[
+    {
+        "name": "getGCPProjects",
+        "apiurl": "@google-cloud/resource",
+        "entries": 7,
+        "reason": null,
+        "account_id": "111111111111111111111"
+    },
+    {
+        "name": "getVMs",
+        "apiurl": "Compute Engine API",
+        "entries": 1,
+        "reason": null,
+        "account_id": "111111111111111111111"
+    }
+]

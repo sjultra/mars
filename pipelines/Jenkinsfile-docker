@@ -1,0 +1,34 @@
+def secrets = [
+  [path: 'kv/mars-test-config', engineVersion: 2, secretValues: [
+    [envVar: 'STORE_TOKEN', vaultKey: 'DOCKER_STORE_TOKEN'],
+    [envVar: 'STORE_USER', vaultKey: 'DOCKER_STORE_USER'],
+    [envVar: 'STORE_URL', vaultKey: 'DOCKER_STORE_URL'],
+    [envVar: 'MARS_CONFIG', vaultKey: 'MARS_CONFIG']
+  ]]
+]
+
+def configuration = [vaultUrl: 'https://vault.vzxy.net',  vaultCredentialId: 'VAULT_TOKEN', engineVersion: 2]
+
+pipeline {
+    agent any
+
+    stages {   
+        stage('Vault') {
+            steps {
+                withVault([configuration: configuration, vaultSecrets: secrets]) {
+                    sh """
+                        docker login "${env.STORE_URL}" --username "${env.STORE_USER}" --password "${env.STORE_TOKEN}"
+                        docker build -t "${env.STORE_URL}/runner/mars:dev" .
+                        docker push "${env.STORE_URL}/runner/mars:dev"
+                    """
+                }
+            }  
+        }
+    }
+
+    post {
+        cleanup {
+            cleanWs()
+        }
+    }
+}

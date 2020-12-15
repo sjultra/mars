@@ -1,0 +1,47 @@
+{
+    "name": "report_gen",
+    "version": "0.0.4",
+    "description": "Report Generator for diferent data sources",
+    "main": "main.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "pkg ."
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sjultra/report_gen.git"
+    },
+    "bin": "main.js",
+    "keywords": [
+        "report",
+        "generator",
+        "agregator",
+        "generate",
+        "report",
+        "generate"
+    ],
+    "author": "sjultra",
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/sjultra/report_gen/issues"
+    },
+    "homepage": "https://github.com/sjultra/report_gen#readme",
+    "dependencies": {
+        "@google-cloud/compute": "^2.3.0",
+        "@google-cloud/resource": "^1.2.1",
+        "@google-cloud/security-center": "^5.0.1",
+        "@prisma/client": "^2.9.0",
+        "axios": "^0.19.2",
+        "commander": "^5.1.0",
+        "csv-parse": "^4.14.1",
+        "json2csv": "^5.0.3",
+        "simple-git": "^2.24.0",
+        "wait.for-es6": "^0.1.0",
+        "xlsx": "^0.16.8",
+        "xml2json": "^0.12.0"
+    },
+    "devDependencies": {
+        "@prisma/cli": "^2.9.0",
+        "pkg": "^4.4.9"
+    }
+}

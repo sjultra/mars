@@ -1,0 +1,2 @@
+"Mars Tag","Instance Id","Zone","First Seen","Current Status","Machine Type","Cpu Type","Vm Name","Creation Tls","Last Seen"
+"Test1","simple-vm","us-central1-c","2020-09-23T10:04:41.156-07:00","TERMINATED","f1-micro","Unknown CPU Platform","simple-vm","2020-09-23T10:04:35.877-07:00","2020-10-18T15:59:25.872-07:00"

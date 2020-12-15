@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model getGCPProjects {
+  project_id    String    @id
+  project_name  String?
+  project_owner String?
+  product       String?
+  expensetype   String?
+  organization  String?
+  first_seen    DateTime?
+  last_seen     DateTime?
+}
+
+model getGCPVMs {
+  instance_id     String    @id
+  creation_tls    DateTime?
+  first_seen      DateTime?
+  last_seen       DateTime?
+  vm_name         String?
+  current_status  String?
+  daily_runtime   Int?
+  mt_family       String?
+  machine_type    String?
+  cpu_type        String?
+  cpu_num         Int?
+  gb_mem          Float?
+  pd_std_total    Int?
+  ps_ssd_total    Int?
+  local_ssd_total Int?
+  vm_owner        String?
+  region          String?
+  zone            String?
+  project_id      String?
+}
+
+model runTimeStats {
+  pk         Int     @id @default(autoincrement())
+  name       String?
+  apiurl     String?
+  entries    Int?
+  reason     String?
+  account_id String?
+}
+
+model getGCPIP {
+  instance_id String    @id
+  ip_address  String?
+  ip_type     String?
+  first_seen  DateTime?
+  last_seen   DateTime?
+}
+
+model getGCPLicense {
+  instance_id String    @id
+  license     String?
+  first_seen  DateTime?
+  last_seen   DateTime?
+}
+
+model getPrismaAuditLogs {
+  timestamp     String  @id
+  user          String?
+  ip            String?
+  resource_type String?
+  resource_name String?
+  action        String?
+  result        String?
+}
+
+model getPrismaCompliance {
+  name              String  @id
+  description       String?
+  cloud             String?
+  created_by        String?
+  last_modified_by  String?
+  last_modified_on  String?
+  policies_assigned String?
+}
+
+model getPrismaPolicies {
+  policy_descriptor      String  @id
+  policy_name            String?
+  compliance_requirement String?
+  compliance_section     String?
+  category               String?
+  policy_class           String?
+  policy_sub_types       String?
+  cloud                  String?
+  severity               String?
+  policy_type            String?
+  labels                 String?
+  remediable             String?
+  policy_mode            String?
+  standards              String?
+  last_modified_by       String?
+  status                 String?
+  rql                    String?
+}
+
+model getPrismaPolicyCompliance {
+  standard_name              String  @id
+  standard_description       String?
+  requirement_id             String?
+  rights_of_the_data_subject String?
+  section_id                 String?
+  section_description        String?
+  section_label              String?
+}
+
+model getPrismaSA {
+  name       String  @id
+  created_by String?
+  created_at String?
+  last_used  String?
+  status     String?
+  expires_on String?
+  role_name  String?
+  role_type  String?
+}
+
+model getPrismaUsers {
+  email               String  @id
+  first_name          String?
+  last_name           String?
+  time_zone           String?
+  enabled             String?
+  last_modified_by    String?
+  last_modified_at    String?
+  last_login_at       String?
+  role_name           String?
+  role_type           String?
+  display_name        String?
+  access_keys_allowed String?
+}

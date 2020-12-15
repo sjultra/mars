@@ -1,0 +1,14 @@
+[
+    {
+        "creation_tls": "2020-09-23T10:04:35.877-07:00",
+        "first_seen": "2020-09-23T10:04:41.156-07:00",
+        "last_seen": "2020-10-18T15:59:25.872-07:00",
+        "vm_name": "simple-vm",
+        "current_status": "TERMINATED",
+        "machine_type": "f1-micro",
+        "cpu_type": "Unknown CPU Platform",
+        "instance_id": "simple-vm",
+        "zone": "us-central9-z",
+        "mars_tag": "Test1"
+    }
+]

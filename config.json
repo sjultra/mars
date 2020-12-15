@@ -1,0 +1,122 @@
+{
+    "PrismaCloud": [
+        {
+            "credentials": {
+                "api": "https://api.prismacloud.io",
+                "ApiID": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                "ApiSecretKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            },
+            "requests": [
+                "getPrismaUsers",
+                "getPrismaSA",
+                "getPrismaAuditLogs",
+                "getPrismaPolicies",
+                "getPrismaCompliance",
+                "getPrismaPolicyCompliance",
+                "getPrismaAlerts",
+                "getPrismaConnClouds", 
+                "getPrismaSSOBypass",
+                "getPrismaResourceLists",
+                "getPrismaResourceScans"
+            ],
+            "tag": "demo1"
+        },
+        {
+            "credentials": {
+                "api": "https://api.prismacloud.io",
+                "ApiID": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                "ApiSecretKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            },
+            "requests": [
+                "stable"
+            ],
+            "tag": "demo2Prod"
+        },
+        ,
+        {
+            "credentials": {
+                "api": "https://api.prismacloud.io",
+                "ApiID": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                "ApiSecretKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            },
+            "requests": [
+                "beta"
+            ],
+            "tag": "demo2Trial"
+        }
+    ],
+    
+    "Qualys": [
+        {
+            "credentials": {
+                "api": "https://qualysapi.qualys.com",
+                "username": "XXXXXXXXXX",
+                "password": "XXXXXXXXXX"
+            },
+            "requests": [
+                "get_assets"
+            ],
+            "tag": "demo1"
+        }
+    ],
+    "GCP": [
+        {
+            "credentials": {
+                "GOOGLE_APPLICATION_CREDENTIALS": "/root/Mars/config/SA_File.json",
+                "ORG_ID": "xxxxxxxxxxxx"
+            },
+            "requests": [
+                "getGCPVMs",
+                "getGCPProjects",
+                "getGCPAssets",
+                "getGCPFindings",
+                "getGCPLicense",
+                "getGCPIP"
+            ]
+        }
+    ],
+    "output": [
+        {
+            "report": "CSV",
+            "path": "/root/Mars/output/"
+        },
+        {
+            "report": "JSON",
+            "path": "/root/Mars/output/"
+        },
+        {
+            "report": "MYSQL",
+            "path": "mysql://root:my-secret-pw@localhost:3306/Mars"
+        }
+    ],
+    "convertor": [
+        {
+            "type": "csvToXLSX",
+            "path": "/root/Mars/output/",
+            "outputPath":"/root/Mars/output2/"
+        },
+        {
+            "type": "jsonToXLSX",
+            "path": "/root/Mars/output/",
+            "outputPath":"/root/Mars/output2/"
+        }
+    ],
+    "publish": [
+        {
+            "type": "git",
+            "auth":"ssh",
+            "url": "git@github.com:sjultra/secret-repo.git",
+            "path": "/root/Mars/output/",
+            "branch": "main"
+        },
+        {
+            "type": "git",
+            "auth":"pat",
+            "url": "github.com/sjultra/secret-repo",
+            "user": "sjultra",
+            "key": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "path": "/root/Mars/output/",
+            "branch": "main"
+        }
+    ]
+}

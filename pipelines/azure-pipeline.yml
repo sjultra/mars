@@ -1,0 +1,49 @@
+trigger: none
+
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily MARS
+  branches:
+    include:
+    - master
+  always: true
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+container: 
+  image: 'node:lts'
+
+variables:
+- group: 'MARS Secrets'
+
+steps:
+- script: |
+    curl "${MARS_CONFIG_URL}" -o /tmp/credentials.json
+    cat /tmp/credentials.json
+
+    mkdir /tmp/mars-output
+    mkdir /tmp/mars-output/CSV
+    mkdir /tmp/mars-output/JSON
+    mkdir /tmp/mars-output/XLSX
+    git config --global user.email "pipeline@vzxy.net"
+    git config --global user.name "pipeline"
+
+    npm i
+  env:
+    MARS_CONFIG_URL: $(MARS-CONFIG-URL)
+  displayName: 'Prepare Environment'
+
+- script: |
+    node main.js -c /tmp/credentials.json
+    echo "Output:"
+    ls /tmp/mars-output
+    cp -r /tmp/mars-output/* $(Build.ArtifactStagingDirectory)
+  displayName: 'Fetch Data'
+
+- task: PublishBuildArtifacts@1
+  displayName: "Publish data"
+  inputs:
+    pathToPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: "artifacts"
+    publishLocation: "Container"
