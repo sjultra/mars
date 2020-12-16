@@ -34,7 +34,12 @@ There are also for requests the following options as bundles:
                 "getPrismaPolicies",
                 "getPrismaCompliance",
                 "getPrismaPolicyCompliance",
-                "getPrismaAlerts"
+                "getPrismaAlerts",
+                "getPrismaConnClouds", 
+                "getPrismaSSOBypass",
+                "getPrismaInventoryTag",
+                "getPrismaResourceScans",
+                "getPrismaInventoryFilters"
             ],
             "tag":"Credentials identifier tag"
         }

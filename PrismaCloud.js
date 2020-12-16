@@ -17,26 +17,30 @@ const { ReportBuilder } = require('./reports/utils.js');
 
 const PREDEF = {
     "stable": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts'],
-    "beta": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts', 'getPrismaResourceLists', 'getPrismaResourceScans'],
-    "alpha": ['getPrismaResourceLists']
+    "beta": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts', 'getPrismaInventoryTag', 'getPrismaResourceScans','getPrismaInventoryFilters'],
+    "alpha": ['getPrismaInventoryFilters']
 }
 
-const TIMEKEYS = ["timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
+const TIMEKEYS = ["alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
 
 const ConvertTimeToHumanReadable = (data) => {
     if (Array.isArray(data)) {
         for (const entry of data) {
             const KeysAvailable = Object.keys(entry).filter(value => TIMEKEYS.includes(value));
             for (const key of KeysAvailable) {
-                const dateNew = new Date(entry[key])
-                entry[key] = dateNew.toISOString()
+                if (entry[key] !== undefined && entry[key] !== null && entry[key] !== '') {
+                    const dateNew = new Date(entry[key])
+                    entry[key] = dateNew.toISOString()
+                }
             }
         }
     } else if (data instanceof Object) {
         const KeysAvailable = Object.keys(data).filter(value => TIMEKEYS.includes(value));
         for (const key of KeysAvailable) {
-            const dateNew = new Date(data[key])
-            data[key] = dateNew.toISOString()
+            if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
+                const dateNew = new Date(data[key])
+                data[key] = dateNew.toISOString()
+            }
         }
     }
 }
@@ -129,8 +133,12 @@ const init = async (pcfg, cfgIndex, config, DataStore, funcList, stats) => {
                             runtimeReport = await getPrismaLicensing(pcfg.api, cfgIndex, config, DataStore, outputWritter)
                             stats.push({ ...runtimeReport, 'account_id': pcfg.ApiID })
                             break
-                        case 'getPrismaResourceLists':
-                            runtimeReport = await getPrismaResourceLists(pcfg.api, cfgIndex, config, DataStore, outputWritter)
+                        case 'getPrismaInventoryTag':
+                            runtimeReport = await getPrismaInventoryTag(pcfg.api, cfgIndex, config, DataStore, outputWritter)
+                            stats.push({ ...runtimeReport, 'account_id': pcfg.ApiID })
+                            break
+                        case 'getPrismaInventoryFilters':
+                            runtimeReport = await getPrismaInventoryFilters(pcfg.api, cfgIndex, config, DataStore, outputWritter)
                             stats.push({ ...runtimeReport, 'account_id': pcfg.ApiID })
                             break
                     }
@@ -160,8 +168,8 @@ const getPrismaSSOBypass = async (pcfgapi, cfgIndex, config, DataStore, outputWr
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        ConvertTimeToHumanReadable(response.data)
         const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
+        ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaSSOBypass' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
         return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaSSOBypass', apiurl: options.url, entries: response.data.length, reason: null }
@@ -186,8 +194,8 @@ const getPrismaConnClouds = async (pcfgapi, cfgIndex, config, DataStore, outputW
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        ConvertTimeToHumanReadable(response.data)
         const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
+        ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaConnClouds' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
         return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaConnClouds', apiurl: options.url, entries: response.data.length, reason: null }
@@ -197,9 +205,37 @@ const getPrismaConnClouds = async (pcfgapi, cfgIndex, config, DataStore, outputW
     }
 };
 
-const getPrismaResourceLists = async (pcfgapi, cfgIndex, config, DataStore, outputWritter) => {
-    console.log('Getting PrismaCLoud Resource Lists information');
-    const api = pcfgapi + '/resource/scan_info';
+const getPrismaInventoryTag = async (pcfgapi, cfgIndex, config, DataStore, outputWritter) => {
+    console.log('Getting PrismaCLoud Inventory Tags information');
+    const api = pcfgapi + '/v2/inventory';
+    const jwt = DataStore.get('x-redlock-auth');
+    const options = {
+        method: 'GET',
+        headers: {
+            'x-redlock-auth': jwt,
+            accept: 'application/json; charset=UTF-8',
+        },
+        params: { listType: 'TAG' },
+        url: api
+    };
+    try {
+        const response = await axios(options)
+        const dataResponse = JSON.parse(JSON.stringify(response.data.groupedAggregates))
+        const extras = { timestamp: response.data.timestamp, requestedTimestamp: response.data.requestedTimestamp, 'mars_tag': config.PrismaCloud[cfgIndex].tag }
+        const dataRemapped = dataResponse.map(entry => ({ ...entry, ...extras }))
+        ConvertTimeToHumanReadable(dataRemapped)
+        data = { data: dataRemapped, funcName: 'getPrismaInventoryTag' }
+        outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
+        return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaInventoryTag', apiurl: options.url, entries: response.data.summary, reason: null }
+    } catch (err) {
+        console.log('error:', err)
+        return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaInventoryTag', apiurl: options.url, entries: 0, reason: JSON.stringify(err, null, 4) }
+    }
+};
+
+const getPrismaInventoryFilters = async (pcfgapi, cfgIndex, config, DataStore, outputWritter) => {
+    console.log('Getting PrismaCLoud Inventory Filters information');
+    const api = pcfgapi + '/filter/inventory';
     const jwt = DataStore.get('x-redlock-auth');
     const options = {
         method: 'GET',
@@ -211,16 +247,16 @@ const getPrismaResourceLists = async (pcfgapi, cfgIndex, config, DataStore, outp
     };
     try {
         const response = await axios(options)
-        const dataResponse = JSON.parse(JSON.stringify(response.data.resources))
+        const dataResponse = JSON.parse(JSON.stringify(response.data))
         const extras = { timestamp: response.data.timestamp, 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const dataRemapped = dataResponse.map(entry => ({ ...entry, ...extras }))
         ConvertTimeToHumanReadable(dataRemapped)
-        data = { data: dataRemapped, funcName: 'getPrismaResourceLists' }
+        data = { data: dataRemapped, funcName: 'getPrismaInventoryFilters' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
-        return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaResourceLists', apiurl: options.url, entries: response.data.length, reason: null }
+        return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaInventoryFilters', apiurl: options.url, entries: dataRemapped.length, reason: null }
     } catch (err) {
         console.log('error:', err)
-        return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaResourceLists', apiurl: options.url, entries: 0, reason: JSON.stringify(err, null, 4) }
+        return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaInventoryFilters', apiurl: options.url, entries: 0, reason: JSON.stringify(err, null, 4) }
     }
 };
 
@@ -287,8 +323,8 @@ const getPrismaUsers = async (pcfgapi, cfgIndex, config, DataStore, outputWritte
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        ConvertTimeToHumanReadable(response.data)
         const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
+        ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaUsers' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
         return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaUsers', apiurl: options.url, entries: response.data.length, reason: null }
@@ -313,8 +349,8 @@ const getPrismaSA = async (pcfgapi, cfgIndex, config, DataStore, outputWritter) 
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        ConvertTimeToHumanReadable(response.data)
         const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
+        ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaSA' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
         return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaSA', apiurl: options.url, entries: response.data.length, reason: null }
@@ -339,8 +375,8 @@ const getPrismaAuditLogs = async (pcfgapi, cfgIndex, config, DataStore, outputWr
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        ConvertTimeToHumanReadable(response.data)
         const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
+        ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaAuditLogs' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
         return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaAuditLogs', apiurl: options.url, entries: response.data.length, reason: null }
@@ -365,10 +401,10 @@ const getPrismaPolicies = async (pcfgapi, cfgIndex, config, DataStore, outputWri
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        ConvertTimeToHumanReadable(response.data)
         const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
         const dataRemappedCP = JSON.parse(JSON.stringify(dataRemapped))
         await getQueryForPolicy(pcfgapi, DataStore, dataRemapped, (data) => {
+            ConvertTimeToHumanReadable(data)
             data = { data: data, funcName: 'getPrismaPolicies' }
             outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
         })
@@ -397,12 +433,11 @@ const getPrismaAlerts = async (pcfgapi, cfgIndex, config, DataStore, outputWritt
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        ConvertTimeToHumanReadable(response.data)
         const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
+        ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaAlerts' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
         return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaAlerts', apiurl: options.url, entries: dataRemapped.length, reason: null }
-
     } catch (err) {
         console.log('error:', err)
         return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaAlerts', apiurl: options.url, entries: 0, reason: JSON.stringify(err, null, 4) }
@@ -424,8 +459,8 @@ const getPrismaCompliance = async (pcfgapi, cfgIndex, config, DataStore, outputW
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        ConvertTimeToHumanReadable(response.data)
         const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
+        ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaCompliance' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
         return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaCompliance', apiurl: options.url, entries: dataRemapped.length, reason: null }
@@ -451,8 +486,8 @@ const getPrismaPolicyCompliance = async (pcfgapi, cfgIndex, config, DataStore, o
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
         const dataResp = deObjectify(response.data)
-        ConvertTimeToHumanReadable(dataResp)
         const dataRemapped = dataResp.map(entry => ({ ...entry, ...extras }))
+        ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaPolicyCompliance' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
         return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaPolicyCompliance', apiurl: options.url, entries: dataResp.length, reason: null }

@@ -16,8 +16,9 @@
                 "getPrismaAlerts",
                 "getPrismaConnClouds", 
                 "getPrismaSSOBypass",
-                "getPrismaResourceLists",
-                "getPrismaResourceScans"
+                "getPrismaInventoryTag",
+                "getPrismaResourceScans",
+                "getPrismaInventoryFilters"
             ],
             "tag": "demo1"
         },

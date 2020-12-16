@@ -60,15 +60,17 @@ const AddDataToAggregator = async (AggregatorConfig, Data) => {
       case SupportedTypesReport[0].toUpperCase():
         try {
           if (fs.existsSync(`${entry.outputPath}/${Data.funcName}.csv`)) {
-            const csv = parse(Data.data, { header: false });
-            fs.appendFileSync(
-              `${entry.outputPath}/${Data.funcName}.csv`,
-              "\n"+csv,
-              function (err) {
-                if (err) return console.log(err)
-                console.log(`Wrote succesfully the ${entry.outputPath}${Data.funcName}.csv file`)
-              }
-            )
+            if (Data.data.length > 0) {
+              const csv = parse(Data.data, { header: false });
+              fs.appendFileSync(
+                `${entry.outputPath}/${Data.funcName}.csv`,
+                "\n" + csv,
+                function (err) {
+                  if (err) return console.log(err)
+                  console.log(`Wrote succesfully the ${entry.outputPath}${Data.funcName}.csv file`)
+                }
+              )
+            }
           } else {
             const csv = parse(Data.data, {});
             fs.appendFileSync(
@@ -98,7 +100,7 @@ const AddDataToAggregator = async (AggregatorConfig, Data) => {
             const JSONFILEData = JSON.parse(jsonFile)
             fs.writeFileSync(
               `${entry.outputPath}${Data.funcName}.json`,
-              JSON.stringify([...JSONFILEData,...Data.data], null, 4),
+              JSON.stringify([...JSONFILEData, ...Data.data], null, 4),
               function (err) {
                 if (err) return console.log(err)
                 console.log(`Wrote succesfully the ${entry.outputPath}${Data.funcName}.json file`)

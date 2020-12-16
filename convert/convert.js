@@ -46,9 +46,12 @@ const Convert = (config) => {
                                         ltrim: true,
                                         rtrim: true,
                                     };
-                                    const csvData=csv(csvFile, csvOptions)
-                                    const ws = xlsx.utils.json_to_sheet(csvData)
-                                    xlsx.utils.book_append_sheet(wb, ws, file.slice(3, -4));
+                                    console.log("\n Adding to xlsx the file: ", file, "\n")
+                                    const csvData = csv(csvFile, csvOptions)
+                                    if (csvData.length > 0) {
+                                        const ws = xlsx.utils.json_to_sheet(csvData)
+                                        xlsx.utils.book_append_sheet(wb, ws, file.slice(3, -4));
+                                    }
                                 }
                             }
                             xlsx.writeFile(wb, entry.outputPath + "/" + entry.Filename);
@@ -64,10 +67,13 @@ const Convert = (config) => {
                             const wb = xlsx.utils.book_new();
                             for (const file of filenames) {
                                 if (file.endsWith(".json")) {
+                                    console.log("\n Adding to xlsx the file: ", file, "\n")
                                     const jsonFile = fs.readFileSync(`${entry.path}/${file}`, 'UTF-8');
-                                    const JSONFILEData=JSON.parse(jsonFile)
-                                    const ws = xlsx.utils.json_to_sheet(JSONFILEData);
-                                    xlsx.utils.book_append_sheet(wb, ws, file.slice(3, -5));
+                                    const JSONFILEData = JSON.parse(jsonFile)
+                                    if (JSONFILEData.length > 0) {
+                                        const ws = xlsx.utils.json_to_sheet(JSONFILEData);
+                                        xlsx.utils.book_append_sheet(wb, ws, file.slice(3, -5));
+                                    }
                                 }
                             }
                             xlsx.writeFile(wb, entry.outputPath + "/" + entry.Filename);

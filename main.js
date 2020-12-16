@@ -89,6 +89,7 @@ const main = async () => {
     if (cfg.publish) {
         await publish()
     }
+    console.log( 'Memory Usage Stats: ',JSON.stringify(process.memoryUsage()),'\n', 'Version : ', version)
 }
 
 // process.on('unhandledRejection', (reason) => {
