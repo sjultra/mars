@@ -18,10 +18,27 @@ variables:
 - group: 'MARS Secrets'
 
 steps:
-- script: |
-    curl "${MARS_CONFIG_URL}" -o /tmp/credentials.json
-    cat /tmp/credentials.json
+- task: DownloadSecureFile@1
+  name: secretConfig
+  displayName: 'Download Customer Credentials'
+  inputs:
+    secureFile: $(GET_DEVOPS_CONFIG)
+  continueOnError: true
 
+- script: |
+    if [[ "$(secretConfig.secureFilePath)" != "" ]]; then
+        echo "INFO: Download secret config from DevOps File Storage"
+        cp $(secretConfig.secureFilePath) /tmp/credentials.json
+    elif [[ "${MARS_CONFIG_URL}" != "" ]]; then
+        echo "INFO: Download secret config from Azure Blob Storage"
+        curl "${MARS_CONFIG_URL}" -o /tmp/credentials.json
+    else
+        echo "ERROR: Cannot find secret config"
+        exit 1
+    fi
+
+    cat /tmp/credentials.json
+    
     mkdir /tmp/mars-output
     mkdir /tmp/mars-output/CSV
     mkdir /tmp/mars-output/JSON
