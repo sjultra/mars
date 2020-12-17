@@ -17,11 +17,11 @@ const { ReportBuilder } = require('./reports/utils.js');
 
 const PREDEF = {
     "stable": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts'],
-    "beta": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts', 'getPrismaInventoryTag', 'getPrismaResourceScans','getPrismaInventoryFilters'],
+    "beta": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts', 'getPrismaInventoryTag', 'getPrismaResourceScans', 'getPrismaInventoryFilters'],
     "alpha": ['getPrismaInventoryFilters']
 }
 
-const TIMEKEYS = ["alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
+const TIMEKEYS = ["requestedTimestamp", "alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
 
 const ConvertTimeToHumanReadable = (data) => {
     if (Array.isArray(data)) {
@@ -168,7 +168,7 @@ const getPrismaSSOBypass = async (pcfgapi, cfgIndex, config, DataStore, outputWr
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
+        const dataRemapped = response.data.map(entry => ({ Email:entry, ...extras }))
         ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaSSOBypass' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
