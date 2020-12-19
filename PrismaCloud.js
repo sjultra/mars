@@ -23,6 +23,8 @@ const PREDEF = {
 
 const TIMEKEYS = ["requestedTimestamp", "alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
 
+
+
 const ConvertTimeToHumanReadable = (data) => {
     if (Array.isArray(data)) {
         for (const entry of data) {
@@ -30,7 +32,7 @@ const ConvertTimeToHumanReadable = (data) => {
             for (const key of KeysAvailable) {
                 if (entry[key] !== undefined && entry[key] !== null && entry[key] !== '') {
                     const dateNew = new Date(entry[key])
-                    entry[key] = dateNew.toISOString()
+                    entry[key] = dateNew.toISOString().replace("T", " ").replace("Z", " ")
                 }
             }
         }
@@ -39,11 +41,12 @@ const ConvertTimeToHumanReadable = (data) => {
         for (const key of KeysAvailable) {
             if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
                 const dateNew = new Date(data[key])
-                data[key] = dateNew.toISOString()
+                data[key] = dateNew.toISOString().replace("T", " ").replace("Z", " ")
             }
         }
     }
 }
+
 const deObjectify = (data) => {
     const Arr = []
     for (const key of Object.keys(data)) {
@@ -168,7 +171,7 @@ const getPrismaSSOBypass = async (pcfgapi, cfgIndex, config, DataStore, outputWr
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        const dataRemapped = response.data.map(entry => ({ Email:entry, ...extras }))
+        const dataRemapped = response.data.map(entry => ({ Email: entry, ...extras }))
         ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaSSOBypass' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
@@ -514,9 +517,9 @@ const getQueryForPolicy = async (pcfgapi, DataStore, data, callback) => {
                     url: api,
                 }
                 response = await axios(options)
-                element.rule.rql = response.data
+                element.rql = response.data
             } else {
-                element.rule.rql = 'N/A'
+                element.rql = 'N/A'
             }
         }
         callback(data)
