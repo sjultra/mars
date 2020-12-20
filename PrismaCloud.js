@@ -21,7 +21,7 @@ const PREDEF = {
     "alpha": ['getPrismaInventoryFilters']
 }
 
-const TIMEKEYS = ["requestedTimestamp", "alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
+const TIMEKEYS = ["ruleLastModifiedOn","requestedTimestamp", "alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
 
 
 
@@ -32,7 +32,7 @@ const ConvertTimeToHumanReadable = (data) => {
             for (const key of KeysAvailable) {
                 if (entry[key] !== undefined && entry[key] !== null && entry[key] !== '') {
                     const dateNew = new Date(entry[key])
-                    entry[key] = dateNew.toISOString().replace("T", " ").replace("Z", " ")
+                    entry[key] = dateNew.toISOString().replace("T", " ").replace("Z", "")
                 }
             }
         }
@@ -41,7 +41,7 @@ const ConvertTimeToHumanReadable = (data) => {
         for (const key of KeysAvailable) {
             if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
                 const dateNew = new Date(data[key])
-                data[key] = dateNew.toISOString().replace("T", " ").replace("Z", " ")
+                data[key] = dateNew.toISOString().replace("T", " ").replace("Z", "")
             }
         }
     }

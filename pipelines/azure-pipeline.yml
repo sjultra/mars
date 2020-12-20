@@ -12,7 +12,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 container: 
-  image: 'node:lts'
+  image: 'sjultra/node:devops'
 
 variables:
 - group: 'MARS Secrets'
@@ -26,6 +26,8 @@ steps:
   continueOnError: true
 
 - script: |
+    set -xe
+
     if [[ "$(secretConfig.secureFilePath)" != "" ]]; then
         echo "INFO: Download secret config from DevOps File Storage"
         cp $(secretConfig.secureFilePath) /tmp/credentials.json
@@ -45,6 +47,10 @@ steps:
     mkdir /tmp/mars-output/XLSX
     git config --global user.email "pipeline@vzxy.net"
     git config --global user.name "pipeline"
+
+    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+    sudo apt-get install git-lfs -y
+    git lfs install
 
     npm i
   env:
