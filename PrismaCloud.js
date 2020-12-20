@@ -10,7 +10,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-
+const isIpPrivate = require('private-ip')
+const whoiser = require('whoiser')
 const axios = require('axios');
 const { InitAggregator, AddDataToAggregator, WriteDataFromAggregator } = require('./reports/report.js');
 const { ReportBuilder } = require('./reports/utils.js');
@@ -21,7 +22,7 @@ const PREDEF = {
     "alpha": ['getPrismaInventoryFilters']
 }
 
-const TIMEKEYS = ["ruleLastModifiedOn","requestedTimestamp", "alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
+const TIMEKEYS = ["ruleLastModifiedOn", "requestedTimestamp", "alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
 
 
 
@@ -378,7 +379,18 @@ const getPrismaAuditLogs = async (pcfgapi, cfgIndex, config, DataStore, outputWr
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
+        const obj = {}
+        for (const entry of response.data) {
+            if (!isIpPrivate(entry.ipAddress)) {
+                obj[entry.ipAddress] = null
+            }
+        }
+        for (const entry of Object.keys(obj)) {
+            data = await whoiser(entry)
+            obj[entry] = data
+            console.log(entry)
+        }
+        const dataRemapped = response.data.map(entry => ({ ...entry, whois: obj[entry.ipAddress], ...extras }))
         ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaAuditLogs' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)

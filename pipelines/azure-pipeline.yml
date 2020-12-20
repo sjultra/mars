@@ -48,6 +48,7 @@ steps:
     git config --global user.email "pipeline@vzxy.net"
     git config --global user.name "pipeline"
 
+    # This install procedure come from here: https://stackoverflow.com/questions/48734119/git-lfs-is-not-a-git-command-unclear/48734334
     curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
     sudo apt-get install git-lfs -y
     git lfs install

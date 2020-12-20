@@ -35,8 +35,10 @@
         "commander": "^5.1.0",
         "csv-parse": "^4.14.1",
         "json2csv": "^5.0.3",
+        "private-ip": "^2.1.1",
         "simple-git": "^2.24.0",
         "wait.for-es6": "^0.1.0",
+        "whoiser": "^1.9.2",
         "xlsx": "^0.16.8",
         "xml2json": "^0.12.0"
     },
