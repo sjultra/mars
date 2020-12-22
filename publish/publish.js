@@ -26,12 +26,39 @@ const checkPath = (path) => {
     }
 }
 
+const getFileList = (path) => {
+    //Parse each folder until only files are found
+    filelist = {}
+    filenames = fs.readdirSync(path)
+    for (file of filenames) {
+        if (!file.startsWith(".")) {
+            newpath = path + "/" + file
+            if (fs.lstatSync(newpath).isDirectory()) {
+                getFileList(newpath)
+            } else {
+                size = getFileSize(newpath)
+                filelist[file] = size
+            }
+        }
+    }
+    return filelist
+}
+
+const getFileSize = (filename) => {
+    const stats = fs.statSync(filename);
+    const { size } = stats;
+    // convert to human readable format.
+    const i = Math.floor(Math.log(size) / Math.log(1024));
+    return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['B', 'KB', 'MB', 'GB', 'TB'][i];
+}
+
 const Publish = (config) => {
     if (config.publish && config.publish.length >= 1) {
         for (const entry of config.publish) {
             switch (entry.type.toUpperCase()) {
                 case SupportedTypesPublish[0].toUpperCase():
                     checkPath(entry.path)
+                    console.log(JSON.stringify( getFileList(entry.path),null, 4))
                     const remote = (entry.auth.toUpperCase() == SupportedTypesPublishAuth[0]) ? entry.url : `https://${entry.user}:${entry.key}@${entry.url}`;
                     try {
                         const tmpGitDir = `/tmp/git_${uuid.v1()}`

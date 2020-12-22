@@ -22,7 +22,7 @@ const PREDEF = {
     "alpha": ['getPrismaInventoryFilters']
 }
 
-const TIMEKEYS = ["ruleLastModifiedOn", "requestedTimestamp", "alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
+const TIMEKEYS = ["eventOccured","ruleLastModifiedOn", "requestedTimestamp", "alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
 
 
 
@@ -388,8 +388,8 @@ const getPrismaAuditLogs = async (pcfgapi, cfgIndex, config, DataStore, outputWr
         for (const entry of Object.keys(obj)) {
             data = await whoiser(entry)
             obj[entry] = data
-            console.log(entry)
         }
+        delete obj
         const dataRemapped = response.data.map(entry => ({ ...entry, whois: obj[entry.ipAddress], ...extras }))
         ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaAuditLogs' }

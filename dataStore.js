@@ -29,7 +29,7 @@ class DStore {
         delete this._data[id];
     }
     debug(str = "") {
-        console.log(str, JSON.stringify(this._data));
+        console.log(str, JSON.stringify(this._data, null, 4));
     }
 }
 
