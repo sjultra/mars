@@ -61,10 +61,11 @@ const AddDataToAggregator = async (AggregatorConfig, Data) => {
         try {
           if (Data.data.length > 0) {
             if (fs.existsSync(`${entry.outputPath}/${Data.funcName}.csv`)) {
-              const csv = parse(Data.data, { header: false });
+              var newLine = '\n';
+              const csv = parse(Data.data, { header: false, encoding: 'utf8', delimiter: '\t' })
               fs.appendFileSync(
                 `${entry.outputPath}/${Data.funcName}.csv`,
-                "\n" + csv,
+                newLine + csv,
                 function (err) {
                   if (err) return console.log(err)
                   console.log(`Wrote succesfully the ${entry.outputPath}${Data.funcName}.csv file`)
@@ -72,10 +73,10 @@ const AddDataToAggregator = async (AggregatorConfig, Data) => {
               )
 
             } else {
-              const csv = parse(Data.data, {});
+              const csv = parse(Data.data, { header: true, encoding: 'utf8', delimiter: '\t'})
               fs.appendFileSync(
                 `${entry.outputPath}/${Data.funcName}.csv`,
-                csv,
+                "\"sep=\t\"\n" + csv,
                 function (err) {
                   if (err) return console.log(err)
                   console.log(`Wrote succesfully the ${entry.outputPath}${Data.funcName}.csv file`)

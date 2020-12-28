@@ -58,7 +58,7 @@ const Publish = (config) => {
             switch (entry.type.toUpperCase()) {
                 case SupportedTypesPublish[0].toUpperCase():
                     checkPath(entry.path)
-                    console.log(JSON.stringify( getFileList(entry.path),null, 4))
+                    console.log(JSON.stringify(getFileList(entry.path), null, 4))
                     const remote = (entry.auth.toUpperCase() == SupportedTypesPublishAuth[0]) ? entry.url : `https://${entry.user}:${entry.key}@${entry.url}`;
                     try {
                         const tmpGitDir = `/tmp/git_${uuid.v1()}`

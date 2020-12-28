@@ -40,14 +40,16 @@ const Convert = (config) => {
                             for (const file of filenames) {
                                 if (file.endsWith(".csv")) {
                                     const csvFile = fs.readFileSync(`${entry.path}/${file}`, 'UTF-8');
+                                    const csvFileClean=csvFile.replace( "\"sep=\t\"\n","")
                                     const csvOptions = {
+                                        encoding: 'utf8',
+                                        delimiter: '\t',
                                         columns: true,
-                                        delimiter: ',',
                                         ltrim: true,
                                         rtrim: true,
                                     };
                                     console.log("\n Adding to xlsx the file: ", file, "\n")
-                                    const csvData = csv(csvFile, csvOptions)
+                                    const csvData = csv(csvFileClean, csvOptions)
                                     if (csvData.length > 0) {
                                         const ws = xlsx.utils.json_to_sheet(csvData)
                                         xlsx.utils.book_append_sheet(wb, ws, file.slice(3, -4));

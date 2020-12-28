@@ -18,11 +18,11 @@ const { ReportBuilder } = require('./reports/utils.js');
 
 const PREDEF = {
     "stable": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts'],
-    "beta": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts', 'getPrismaInventoryTag', 'getPrismaResourceScans', 'getPrismaInventoryFilters'],
-    "alpha": ['getPrismaInventoryFilters']
+    "beta": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts', 'getPrismaInventoryTag', 'getPrismaResourceScans', 'getPrismaInventoryFilters','getPrismaAssets'],
+    "alpha": ['']
 }
 
-const TIMEKEYS = ["eventOccured","ruleLastModifiedOn", "requestedTimestamp", "alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
+const TIMEKEYS = ["eventOccurred", "ruleLastModifiedOn", "requestedTimestamp", "alertTime", "firstSeen", "lastSeen", "alertTime", "timestamp", "createdOn", "lastModifiedOn", "createdTs", "lastUsedTime", "expiresOn", "lastModifiedTs", "lastLoginTs"]
 
 
 
@@ -115,6 +115,10 @@ const init = async (pcfg, cfgIndex, config, DataStore, funcList, stats) => {
                             break
                         case 'getPrismaAlerts':
                             runtimeReport = await getPrismaAlerts(pcfg.api, cfgIndex, config, DataStore, outputWritter)
+                            stats.push({ ...runtimeReport, 'account_id': pcfg.ApiID })
+                            break
+                        case 'getPrismaAssets':
+                            runtimeReport = await getPrismaAssets(pcfg.api, cfgIndex, config, DataStore, outputWritter)
                             stats.push({ ...runtimeReport, 'account_id': pcfg.ApiID })
                             break
                         case 'getPrismaStatus':
@@ -237,6 +241,34 @@ const getPrismaInventoryTag = async (pcfgapi, cfgIndex, config, DataStore, outpu
     }
 };
 
+const getPrismaAssets = async (pcfgapi, cfgIndex, config, DataStore, outputWritter) => {
+    console.log('Getting PrismaCLoud Assets grouped by resource type information');
+    const api = pcfgapi + '/v2/inventory?timeType=to_now&timeUnit=epoch&groupBy=resource.type';
+    const jwt = DataStore.get('x-redlock-auth');
+    const options = {
+        method: 'GET',
+        headers: {
+            'x-redlock-auth': jwt,
+            accept: 'application/json; charset=UTF-8',
+        },
+        params: { listType: 'TAG' },
+        url: api
+    };
+    try {
+        const response = await axios(options)
+        const dataResponse = JSON.parse(JSON.stringify(response.data.groupedAggregates))
+        const extras = { timestamp: response.data.timestamp, requestedTimestamp: response.data.requestedTimestamp, 'mars_tag': config.PrismaCloud[cfgIndex].tag }
+        const dataRemapped = dataResponse.map(entry => ({ ...entry, ...extras }))
+        ConvertTimeToHumanReadable(dataRemapped)
+        data = { data: dataRemapped, funcName: 'getPrismaAssets' }
+        outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
+        return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaAssets', apiurl: options.url, entries: response.data.summary, reason: null }
+    } catch (err) {
+        console.log('error:', err)
+        return { 'mars_tag': config.PrismaCloud[cfgIndex].tag, name: 'getPrismaAssets', apiurl: options.url, entries: 0, reason: JSON.stringify(err, null, 4) }
+    }
+};
+
 const getPrismaInventoryFilters = async (pcfgapi, cfgIndex, config, DataStore, outputWritter) => {
     console.log('Getting PrismaCLoud Inventory Filters information');
     const api = pcfgapi + '/filter/inventory';
@@ -338,6 +370,7 @@ const getPrismaUsers = async (pcfgapi, cfgIndex, config, DataStore, outputWritte
     }
 };
 
+
 const getPrismaSA = async (pcfgapi, cfgIndex, config, DataStore, outputWritter) => {
     console.log('Getting PrismaCLoud SA information');
     const api = pcfgapi + '/access_keys';
@@ -373,7 +406,7 @@ const getPrismaAuditLogs = async (pcfgapi, cfgIndex, config, DataStore, outputWr
             'x-redlock-auth': jwt,
             accept: 'application/json; charset=UTF-8',
         },
-        params: { timeType: 'relative', timeAmount: '7', timeUnit: 'day' },
+        params: { timeType: 'to_now', timeUnit: 'epoch' },
         url: api,
     };
     try {
@@ -387,7 +420,7 @@ const getPrismaAuditLogs = async (pcfgapi, cfgIndex, config, DataStore, outputWr
         }
         for (const entry of Object.keys(obj)) {
             data = await whoiser(entry)
-            obj[entry] = data
+            obj[entry] = { NetName: data.NetName, Country: data.organisation.Country }
         }
         delete obj
         const dataRemapped = response.data.map(entry => ({ ...entry, whois: obj[entry.ipAddress], ...extras }))
@@ -435,7 +468,7 @@ const getPrismaPolicies = async (pcfgapi, cfgIndex, config, DataStore, outputWri
 
 const getPrismaAlerts = async (pcfgapi, cfgIndex, config, DataStore, outputWritter) => {
     console.log('Getting PrismaCLoud Alerts Information');
-    const api = pcfgapi + '/alert?timeType=relative&timeAmount=1&timeUnit=week&detailed=true';
+    const api = pcfgapi + '/alert?alert.status=open&timeType=relative&timeAmount=3&timeUnit=week&detailed=true';
     const jwt = DataStore.get('x-redlock-auth');
     const options = {
         method: 'GET',
@@ -448,7 +481,26 @@ const getPrismaAlerts = async (pcfgapi, cfgIndex, config, DataStore, outputWritt
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
+        const dataRemapped = response.data.map(entry => ({
+            id: entry.id ? entry.id : "",
+            ...extras,
+            status: entry.status ? entry.status : "",
+            reason: entry.reason ? entry.reason : "",
+            firstSeen: entry.firstSeen ? entry.firstSeen : "",
+            lastSeen: entry.lastSeen ? entry.lastSeen : "",
+            alertTime: entry.alertTime ? entry.alertTime : "",
+            policy: entry.policy ? JSON.stringify(entry.policy).substring(0, 3200) + "..." : "",
+            alertRules: entry.alertRules ? entry.alertRules : "",
+            riskDetail: entry.riskDetail ? entry.riskDetail : "",
+            resource: entry.resource ? JSON.stringify(entry.resource).substring(0, 3200) + "..." : "",
+            history: entry.history && entry.history.length > 1 ? entry.history.slice(0, 10) : "",
+            eventOccurred: entry.eventOccurred ? entry.eventOccurred : "",
+            triggeredBy: entry.triggeredBy ? entry.triggeredBy : "",
+            saveSearchId: entry.saveSearchId ? entry.saveSearchId : "",
+            investigateOptions: entry.investigateOptions ? entry.investigateOptions : "",
+            anomalyDetail: entry.anomalyDetail ? entry.anomalyDetail : "",
+            networkAnomaly: entry.networkAnomaly ? entry.networkAnomaly : "",
+        }))
         ConvertTimeToHumanReadable(dataRemapped)
         data = { data: dataRemapped, funcName: 'getPrismaAlerts' }
         outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
