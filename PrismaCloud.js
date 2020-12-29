@@ -449,7 +449,32 @@ const getPrismaPolicies = async (pcfgapi, cfgIndex, config, DataStore, outputWri
     try {
         const extras = { 'mars_tag': config.PrismaCloud[cfgIndex].tag }
         const response = await axios(options)
-        const dataRemapped = response.data.map(entry => ({ ...entry, ...extras }))
+        const dataRemapped = response.data.map(entry => ({
+            ...extras,
+            cloudType: entry.cloudType ? entry.cloudType : "",
+            createdBy: entry.createdBy ? entry.createdBy : "",
+            createdOn: entry.createdOn ? entry.createdOn : "",
+            deleted: entry.deleted,
+            description: entry.description ? JSON.stringify(entry.description).substring(0, 3200) + "..." : "",
+            enabled: entry.enabled,
+            labels: entry.labels && entry.labels.length > 1 ? entry.labels.slice(0, 10) : [],
+            lastModifiedBy: entry.lastModifiedBy ? entry.lastModifiedBy : "",
+            lastModifiedOn: entry.lastModifiedOn ? entry.lastModifiedOn : "",
+            name: entry.name ? entry.name : "",
+            owner: entry.owner ? entry.owner : "",
+            policyCategory: entry.policyCategory ? entry.policyCategory : "",
+            policyClass: entry.policyClass ? entry.policyClass : "",
+            policyId: entry.policyId ? entry.policyId : "",
+            policyMode: entry.policyMode ? entry.policyMode : "",
+            policySubTypes: entry.policySubTypes ? entry.policySubTypes : "",
+            policyType: entry.policyType ? entry.policyType : "",
+            recommendation: entry.recommendation ? JSON.stringify(entry.recommendation).substring(0, 3200) + "..." : "",
+            remediable: entry.remediable,
+            rule: entry.rule ? entry.rule : "",
+            ruleLastModifiedOn: entry.ruleLastModifiedOn ? entry.ruleLastModifiedOn : "",
+            severity: entry.severity ? entry.severity : "",
+            systemDefault: entry.systemDefault
+        }))
         const dataRemappedCP = JSON.parse(JSON.stringify(dataRemapped))
         await getQueryForPolicy(pcfgapi, DataStore, dataRemapped, (data) => {
             ConvertTimeToHumanReadable(data)

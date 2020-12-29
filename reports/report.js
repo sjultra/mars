@@ -73,7 +73,7 @@ const AddDataToAggregator = async (AggregatorConfig, Data) => {
               )
 
             } else {
-              const csv = parse(Data.data, { header: true, encoding: 'utf8', delimiter: '\t'})
+              const csv = parse(Data.data, { header: true, encoding: 'utf8', delimiter: '\t' })
               fs.appendFileSync(
                 `${entry.outputPath}/${Data.funcName}.csv`,
                 "\"sep=\t\"\n" + csv,
@@ -97,26 +97,42 @@ const AddDataToAggregator = async (AggregatorConfig, Data) => {
         break
       case SupportedTypesReport[2].toUpperCase():
         try {
-          if (fs.existsSync(`${entry.outputPath}/${Data.funcName}.json`)) {
-            const jsonFile = fs.readFileSync(`${entry.outputPath}/${Data.funcName}.json`, 'UTF-8');
-            const JSONFILEData = JSON.parse(jsonFile)
-            fs.writeFileSync(
-              `${entry.outputPath}${Data.funcName}.json`,
-              JSON.stringify([...JSONFILEData, ...Data.data], null, 4),
-              function (err) {
-                if (err) return console.log(err)
-                console.log(`Wrote succesfully the ${entry.outputPath}${Data.funcName}.json file`)
-              }
-            )
+          if (Data.funcName == "getPrismaPolicies") {
+            if (!fs.existsSync(`${entry.outputPath}${Data.funcName}`)) {
+              fs.mkdirSync(`${entry.outputPath}${Data.funcName}`)
+            }
+            for (const dataEntry of Data.data) {
+              fs.writeFileSync(
+                `${entry.outputPath}${Data.funcName}/${dataEntry.name.replace(/ /g,"_").replace(/\/|\:/g,"-").substring(0, 16)+"-"+dataEntry.policyId.substr(dataEntry.policyId.length - 5)}.json`,
+                JSON.stringify(dataEntry, null, 4),
+                function (err) {
+                  if (err) return console.log(err)
+                  console.log(`Wrote succesfully the ${entry.outputPath}${Data.funcName}.json file`)
+                }
+              )
+            }
           } else {
-            fs.appendFileSync(
-              `${entry.outputPath}${Data.funcName}.json`,
-              JSON.stringify(Data.data, null, 4),
-              function (err) {
-                if (err) return console.log(err)
-                console.log(`Wrote succesfully the ${entry.outputPath}${Data.funcName}.json file`)
-              }
-            )
+            if (fs.existsSync(`${entry.outputPath}/${Data.funcName}.json`)) {
+              const jsonFile = fs.readFileSync(`${entry.outputPath}/${Data.funcName}.json`, 'UTF-8');
+              const JSONFILEData = JSON.parse(jsonFile)
+              fs.writeFileSync(
+                `${entry.outputPath}${Data.funcName}.json`,
+                JSON.stringify([...JSONFILEData, ...Data.data], null, 4),
+                function (err) {
+                  if (err) return console.log(err)
+                  console.log(`Wrote succesfully the ${entry.outputPath}${Data.funcName}.json file`)
+                }
+              )
+            } else {
+              fs.appendFileSync(
+                `${entry.outputPath}${Data.funcName}.json`,
+                JSON.stringify(Data.data, null, 4),
+                function (err) {
+                  if (err) return console.log(err)
+                  console.log(`Wrote succesfully the ${entry.outputPath}${Data.funcName}.json file`)
+                }
+              )
+            }
           }
         } catch (err) {
           console.log('error: ', err)
