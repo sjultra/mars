@@ -67,12 +67,7 @@
                 "ORG_ID": "xxxxxxxxxxxx"
             },
             "requests": [
-                "getGCPVMs",
-                "getGCPProjects",
-                "getGCPAssets",
-                "getGCPFindings",
-                "getGCPLicense",
-                "getGCPIP"
+                "beta"
             ]
         }
     ],

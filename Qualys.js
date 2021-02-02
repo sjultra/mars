@@ -12,10 +12,23 @@
  */
 
 const axios = require("axios");
-let xmlParser = require('xml2json');
+const FormData = require('form-data');
+const xmlParser = require('xml2json');
 const { InitAggregator, AddDataToAggregator, WriteDataFromAggregator } = require('./reports/report.js');
 
+
+const PREDEF = {
+  "stable": ['getQualysAssets'],
+  "beta": ['getQualysAssets', 'getQualysScans'],
+  "alpha": [""]
+}
+
 const init = async (qcfg, cfgIndex, config, DataStore, funcList, stats) => {
+  for (const predefConst of Object.keys(PREDEF)) {
+    if (funcList.indexOf(predefConst) != -1) {
+      funcList.splice(funcList.indexOf(predefConst), 1, ...PREDEF[predefConst]);
+    }
+  }
   console.log("Init Qualys");
   const AggConf = InitAggregator(config, config.Qualys[cfgIndex].tag)
   outputWritter = { AggConf, AddDataToAggregator }
@@ -28,14 +41,8 @@ const init = async (qcfg, cfgIndex, config, DataStore, funcList, stats) => {
             runtimeReport = await getQualysAssets(qcfg, cfgIndex, config, DataStore, outputWritter)
             stats.push({ ...runtimeReport, 'account_id': qcfg.username })
             break
-          case 'getQualysAWSCloudConnector':
-            runtimeReport = await getQualysAWSCloudConnector(qcfg, cfgIndex, config, DataStore, outputWritter)
-            stats.push({ ...runtimeReport, 'account_id': qcfg.username })
-            break
-          case 'beta':
-            runtimeReport = await getQualysAssets(qcfg, cfgIndex, config, DataStore, outputWritter)
-            stats.push({ ...runtimeReport, 'account_id': qcfg.username })
-            runtimeReport = await getQualysAWSCloudConnector(qcfg, cfgIndex, config, DataStore, outputWritter)
+          case 'getQualysScans':
+            runtimeReport = await getQualysScans(qcfg, cfgIndex, config, DataStore, outputWritter)
             stats.push({ ...runtimeReport, 'account_id': qcfg.username })
             break
         }
@@ -50,6 +57,15 @@ const init = async (qcfg, cfgIndex, config, DataStore, funcList, stats) => {
 
 const getQualysAssets = async (qcfg, cfgIndex, config, DataStore, outputWritter) => {
   console.log("Getting Qualys information");
+  /*
+  Download a list of scanned hosts in the user’s account. By default, all scanned hosts in the
+user account are included and basic information about each host is provided. Hosts in the
+XML output are sorted by host ID in ascending order.
+  The output of the Host List API is paginated. By default, a maximum of 1,000 host records
+are returned per request. You can customize the page size (i.e. the number of host records)
+by using the parameter “truncation_limit=10000” for instance. In this case the results will
+be return with pages of 10,000 host records.
+  */
   const api = qcfg.api + "/api/2.0/fo/asset/host/?action=list";
   const options = {
     method: "GET",
@@ -65,9 +81,7 @@ const getQualysAssets = async (qcfg, cfgIndex, config, DataStore, outputWritter)
   };
   try {
     const response = await axios(options);
-    console.log(response)
     fmtData = xmlParser.toJson(response.data, { object: true }).HOST_LIST_OUTPUT.RESPONSE.HOST_LIST.HOST
-    console.log("fmtData: ", JSON.stringify(fmtData))
     const extras = { 'mars_tag': config.Qualys[cfgIndex].tag }
     const dataRemapped = fmtData.map(entry => ({ ...entry, ...extras }))
     data = { data: dataRemapped, funcName: 'getQualysAssets' }
@@ -79,36 +93,52 @@ const getQualysAssets = async (qcfg, cfgIndex, config, DataStore, outputWritter)
   }
 };
 
-const getQualysAWSCloudConnector = async (qcfg, cfgIndex, config, DataStore, outputWritter) => {
-  //   console.log("Getting Qualys information");
-  //   const api = qcfg.api + "/cloudview-api/rest/v1/aws/connectors?pageNo=0&pageSize=50";
-  //   const options = {
-  //     method: "GET",
-  //     headers: {
-  //       "Content-Type": "text/xml",
-  //       "X-Requested-With": "Agent reporter",
-  //     },
-  //     url: api,
-  //     auth: {
-  //       username: qcfg.username,
-  //       password: qcfg.password,
-  //     },
-  //   };
-  //   try {
-  //   const response = await axios(options);
-  //   console.log(response)
-  //   fmtData = xmlParser.toJson(response.data, { object: true })
-  //   console.log("fmtData: ", JSON.stringify(fmtData))
-  //   const extras = { 'mars_tag': config.Qualys[cfgIndex].tag }
-  //   const dataRemapped = fmtData.map(entry => ({ ...entry, ...extras }))
-  //   data = { data: dataRemapped, funcName: 'getQualysAWSCloudConnector' }
-  //   outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
-  //   return { 'mars_tag': config.Qualys[cfgIndex].tag, name: 'getQualysAWSCloudConnector', apiurl: options.url, entries: dataRemapped.length, reason: null }
-  // } catch (err) {
-  //   console.log('error:', err)
-  //   return { 'mars_tag': config.Qualys[cfgIndex].tag, name: 'getQualysAWSCloudConnector', apiurl: options.url, entries: 0, reason: JSON.stringify(err, null, 4) }
-  // }
+
+const getQualysScans = async (qcfg, cfgIndex, config, DataStore, outputWritter) => {
+  console.log("Getting Qualys information");
+  /*
+  List IP addresses in the user account. By default, all hosts in the user account are
+included. Optional input parameters support filtering the list by IP addresses and host
+tracking method.
+  */
+  const api = qcfg.api + "/api/2.0/fo/asset/ip/?action=list";
+  var bodyFormData = new FormData();
+  bodyFormData.append('action', 'list');
+  bodyFormData.append('compliance_enabled', '1');
+
+  const options = {
+    method: "POST",
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'X-Requested-With': 'Agent reporter',
+    },
+    url: api,
+    auth: {
+      username: qcfg.username,
+      password: qcfg.password,
+    },
+    data:bodyFormData
+  };
+  try {
+    const response = await axios(options);
+    console.log(response)
+    fmtDataIP_SET=xmlParser.toJson(response.data, { object: true }).IP_LIST_OUTPUT.RESPONSE.IP_SET
+    fmtDataIP = fmtDataIP_SET.IP
+    fmtDataIP_RANGE = fmtDataIP_SET.IP_RANGE
+    console.log("fmtDataIP: ", JSON.stringify(fmtDataIP))
+    console.log("fmtDataIP_RANGE: ", JSON.stringify(fmtDataIP_RANGE))
+    const extras = { 'mars_tag': config.Qualys[cfgIndex].tag }
+    const dataRemapped = fmtDataIP.map(entry => ({ ...entry, ...extras }))
+    data = { data: dataRemapped, funcName: 'getQualysScans' }
+    outputWritter.AddDataToAggregator(outputWritter.AggConf, data)
+    return { 'mars_tag': config.Qualys[cfgIndex].tag, name: 'getQualysScans', apiurl: options.url, entries: dataRemapped.length, reason: null }
+  } catch (err) {
+    console.log('error:', err)
+    return { 'mars_tag': config.Qualys[cfgIndex].tag, name: 'getQualysScans', apiurl: options.url, entries: 0, reason: JSON.stringify(err, null, 4) }
+  }
 };
+
+
 
 module.exports = { init };
 

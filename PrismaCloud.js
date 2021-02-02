@@ -18,7 +18,7 @@ const { ReportBuilder } = require('./reports/utils.js');
 
 const PREDEF = {
     "stable": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts'],
-    "beta": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts', 'getPrismaInventoryTag', 'getPrismaResourceScans', 'getPrismaInventoryFilters','getPrismaAssets'],
+    "beta": ['getPrismaStatus', 'getPrismaUsers', 'getPrismaSA', 'getPrismaAuditLogs', 'getPrismaPolicies', 'getPrismaCompliance', 'getPrismaPolicyCompliance', 'getPrismaConnClouds', 'getPrismaSSOBypass', 'getPrismaAlerts', 'getPrismaInventoryTag', 'getPrismaResourceScans', 'getPrismaInventoryFilters', 'getPrismaAssets'],
     "alpha": ['']
 }
 
@@ -58,12 +58,10 @@ const deObjectify = (data) => {
 
 const init = async (pcfg, cfgIndex, config, DataStore, funcList, stats) => {
 
-    if (funcList.includes("beta")) {
-        funcList = PREDEF.beta
-    } else if (funcList.includes("stable")) {
-        funcList = PREDEF.stable
-    } else if (funcList.includes("alpha")) {
-        funcList = PREDEF.alpha
+    for (const predefConst of Object.keys(PREDEF)) {
+        if (funcList.indexOf(predefConst) != -1) {
+            funcList.splice(funcList.indexOf(predefConst), 1, ...PREDEF[predefConst]);
+        }
     }
 
     console.log('Init Prisma cloud');
@@ -406,7 +404,7 @@ const getPrismaAuditLogs = async (pcfgapi, cfgIndex, config, DataStore, outputWr
             'x-redlock-auth': jwt,
             accept: 'application/json; charset=UTF-8',
         },
-        params: { timeType: 'to_now', timeUnit: 'epoch' },
+        params: { timeType: 'relative', timeAmount: '7', timeUnit: 'day' },
         url: api,
     };
     try {

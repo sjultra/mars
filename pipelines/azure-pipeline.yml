@@ -25,6 +25,20 @@ steps:
     secureFile: $(GET_DEVOPS_CONFIG)
   continueOnError: true
 
+- task: DownloadSecureFile@1
+  name: gcpSecretVZXY
+  displayName: 'Download CONTROL - GCP Credentials'
+  inputs:
+    secureFile: credentials_vzxy.json
+  continueOnError: true
+
+- task: DownloadSecureFile@1
+  name: gcpSecret
+  displayName: 'Download GCP Credentials'
+  inputs:
+    secureFile: gcp_secrets.json
+  continueOnError: true
+
 - script: |
     set -xe
 
@@ -37,6 +51,15 @@ steps:
     else
         echo "ERROR: Cannot find secret config"
         exit 1
+    fi
+
+    if [[ "$(gcpSecret.secureFilePath)" != "" ]]; then
+        cp $(gcpSecret.secureFilePath) /tmp/gcp_secrets.json
+    fi
+    
+    # Get control SA
+     if [[ "$(gcpSecretVZXY.secureFilePath)" != "" ]]; then
+        cp $(gcpSecretVZXY.secureFilePath) /tmp/credentials_vzxy.json
     fi
 
     cat /tmp/credentials.json
